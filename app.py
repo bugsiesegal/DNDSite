@@ -688,4 +688,4 @@ if app.debug:
 
 if __name__ == '__main__':
     app.config['DEBUG'] = False  # Turn Off debug mode
-    app.run(host='0.0.0.0')
+    app.run()
