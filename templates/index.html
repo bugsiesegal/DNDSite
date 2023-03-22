@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <h1>Available Games</h1>
+    <form action="{{ url_for('select_game') }}" method="post">
+        <select name="game_id">
+            <option value="">--Select a game--</option>
+            {% for game in games %}
+                <option value="{{ game.id }}">{{ game.game_name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">View Players</button>
+    </form>
+{% endblock %}

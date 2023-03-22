@@ -1,0 +1,76 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <h1>Players in the Game</h1>
+    <ul>
+        {% for player in players %}
+            <li>{{ player.username }}</li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('index') }}">Back to games</a>
+    <h2>Entities</h2>
+  <table>
+    <tr>
+      <th>ID</th>
+      <th>Name</th>
+      <th>Health</th>
+      <th>Action</th>
+    </tr>
+    {% for entity in entities %}
+      <tr>
+        <td>{{ entity.id }}</td>
+        <td>{{ entity.name }}</td>
+        <td>{{ entity.health }} / {{ entity.max_health }}</td>
+        <td>
+          <form action="{{ url_for('perform_attack') }}" method="post">
+            <input type="hidden" name="defender_id" value="{{ entity.id }}">
+            <select name="attack_id">
+              {% for skill in player_entity.skills %}
+                  {% for attack in skill.actions %}
+                    <option value="{{ attack.id }}">{{ attack.name }}</option>
+                  {% endfor %}
+              {% endfor %}
+            </select>
+            <input type="submit" value="Attack">
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+  </table>
+    <h2>Attack Log</h2>
+    <ul>
+        {% for log_entry in attack_logs %}
+            <li>{{ log_entry }}</li>
+        {% endfor %}
+    </ul>
+    <script>
+      function updatePlayers() {
+        // Fetch the updated data from the server using AJAX
+        fetch('{{ url_for("get_updated_data") }}')
+          .then(response => response.json())
+          .then(data => {
+            // Update the DOM with the new data
+            const entitiesTable = document.querySelector('#entities-table tbody');
+            entitiesTable.innerHTML = '';
+
+            data.entities.forEach(entity => {
+              const row = `
+                <tr>
+                  <td>${entity.id}</td>
+                  <td>${entity.name}</td>
+                  <td>${entity.health} / ${entity.max_health}</td>
+                  <td>
+                    <!-- (Add your attack form code here) -->
+                  </td>
+                </tr>
+              `;
+              entitiesTable.innerHTML += row;
+            });
+          })
+          .catch(error => console.error('Error fetching data:', error));
+      }
+
+      // Call the updatePlayers() function every 1 seconds (5000 milliseconds)
+      setInterval(updatePlayers, 1000);
+    </script>
+{% endblock %}

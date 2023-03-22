@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        .login-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #7289DA;
+            color: white;
+            font-weight: bold;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+        .login-button:hover {
+            background-color: #5b6eae;
+        }
+    </style>
+</head>
+<body>
+    <h1>Login</h1>
+    <a href="{{ url_for('discord.login') }}" class="login-button">Login with Discord</a>
+</body>
+</html>
