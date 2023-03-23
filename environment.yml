@@ -26,6 +26,7 @@ dependencies:
   - flask-wtf=1.1.1=pyhd8ed1ab_0
   - fmt=9.1.0=h924138e_0
   - greenlet=2.0.2=py310heca2aa9_0
+  - gunicorn=20.1.0=py310hff52083_3
   - icu=72.1=hcb278e6_0
   - idna=3.4=pyhd8ed1ab_0
   - importlib-metadata=6.1.0=pyha770c72_0
