@@ -675,12 +675,14 @@ def get_updated_data():
 
 
 @app.route('/')
-@login_required
 def index():
-    games = current_user.games.all()
-    entities = EntityModel.query.filter(EntityModel.user_id.is_(None)).all()
-    player_entity = current_user.player_entity
-    return render_template('index.html', games=games, entities=entities, player_entity=player_entity)
+    if current_user.is_authenticated:
+        games = current_user.games.all()
+        entities = EntityModel.query.filter(EntityModel.user_id.is_(None)).all()
+        player_entity = current_user.player_entity
+        return render_template('index.html', games=games, entities=entities, player_entity=player_entity)
+    else:
+        redirect(url_for('login'))
 
 
 if app.debug:
