@@ -11,7 +11,7 @@ from flask_login import LoginManager, UserMixin, login_required, logout_user, lo
 from flask_dance.contrib.discord import make_discord_blueprint, discord
 from flask_dance.consumer import oauth_authorized
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField
+from wtforms import StringField, SubmitField, SelectField
 from wtforms.validators import DataRequired, Length
 
 os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "0"
@@ -474,6 +474,16 @@ def create_entity():
     return render_template('create_entity.html', skills=skills)
 
 
+class AddEntityForm(FlaskForm):
+    entity = SelectField('Non-Player Entity', validators=[DataRequired()])
+    submit = SubmitField('Add Entity')
+
+class RemoveEntityForm(FlaskForm):
+    entity = SelectField('Non-Player Entity', validators=[DataRequired()])
+    submit = SubmitField('Remove Entity')
+
+
+
 @app.route('/attack', methods=['POST'])
 @login_required
 def perform_attack():
@@ -647,8 +657,36 @@ def game_players():
             entities = EntityModel.query.filter(EntityModel.user_id.is_(None)).all()
             player_entity = EntityModel.query.filter_by(user_id=current_user.id).first()
             attack_logs = session.get('attack_logs', [])
+
+            form = AddEntityForm()
+            form.entity.choices = [(entity.id, entity.name) for entity in EntityModel.query.filter(
+                EntityModel.id.notin_([player.id for player in game.players])).all()]
+
+            if form.validate_on_submit():
+                entity_id = form.entity.data
+                entity = EntityModel.query.get(entity_id)
+                if entity:
+                    game.entities.append(entity)
+                    db.session.commit()
+                    flash('Entity added successfully')
+                else:
+                    flash('Entity not found')
+
+            remove_form = RemoveEntityForm()
+            remove_form.entity.choices = [(entity.id, entity.name) for entity in game.entities]
+
+            if remove_form.validate_on_submit():
+                entity_id = remove_form.entity.data
+                entity = EntityModel.query.get(entity_id)
+                if entity:
+                    game.entities.remove(entity)
+                    db.session.commit()
+                    flash('Entity removed successfully')
+                else:
+                    flash('Entity not found')
+
             return render_template('game_players.html', players=players, attack_logs=attack_logs,
-                                   player_entity=player_entity, entities=entities)
+                                   player_entity=player_entity, entities=entities, form=form, remove_form=remove_form)
         else:
             flash('Game not found')
             return redirect(url_for('index'))
@@ -682,7 +720,7 @@ def index():
         player_entity = current_user.player_entity
         return render_template('index.html', games=games, entities=entities, player_entity=player_entity)
     else:
-        redirect(url_for('login'))
+        return redirect(url_for('login'))
 
 
 if app.debug:

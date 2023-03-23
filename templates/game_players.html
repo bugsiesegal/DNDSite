@@ -43,6 +43,18 @@
             <li>{{ log_entry }}</li>
         {% endfor %}
     </ul>
+    <h2>Add Non-Player Entity</h2>
+    <form action="{{ url_for('game_players') }}" method="POST">
+        {{ form.csrf_token }}
+        {{ form.entity.label }} {{ form.entity }}
+        {{ form.submit }}
+    </form>
+    <h2>Remove Non-Player Entity</h2>
+    <form action="{{ url_for('game_players') }}" method="POST">
+        {{ remove_form.csrf_token }}
+        {{ remove_form.entity.label }} {{ remove_form.entity }}
+        {{ remove_form.submit }}
+    </form>
     <script>
       function updatePlayers() {
         // Fetch the updated data from the server using AJAX
