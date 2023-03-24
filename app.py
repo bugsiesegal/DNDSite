@@ -31,7 +31,7 @@ discord_blueprint = make_discord_blueprint(
     client_id=CLIENT_ID,
     client_secret=CLIENT_SECRET,
     scope=["identify", "guilds"],
-    redirect_url=DISCORD_REDIRECT_URI,  # Update with your app's URL
+    redirect_url=url_for('login', _external=True),  # Update with your app's URL
 )
 app.register_blueprint(discord_blueprint, url_prefix="/login")
 db = SQLAlchemy(app)
