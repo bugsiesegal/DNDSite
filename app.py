@@ -516,6 +516,7 @@ def login():
         return redirect(url_for('index'))
 
     if not discord.authorized:
+        print(1)
         return redirect(url_for('discord.login'))
     else:
         account_info = discord.get('/api/users/@me')
@@ -543,6 +544,7 @@ def login():
 @oauth_authorized.connect_via(discord_blueprint)
 def discord_logged_in(blueprint, token):
     resp = blueprint.session.get('/api/users/@me')
+    print(resp)
     if not resp.ok:
         flash('Failed to fetch user information from Discord')
         return False
