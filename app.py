@@ -516,12 +516,32 @@ def login():
         return redirect(url_for('index'))
 
     if not discord.authorized:
+        print(1)
         return redirect(url_for('discord.login'))
     else:
-        # Remove the entire `else` block, as the user will be logged in by the `discord_logged_in` function
-        pass
+        account_info = discord.get('/api/users/@me')
+        print("account_info:", account_info.json())  # Debugging line
+        if account_info.ok:
+            user_data = account_info.json()
+            print("user_data:", user_data)  # Debugging line
+            user_id = user_data['id']
+            user = UserModel.query.filter_by(discord_id=user_id).first()
+
+            if user is not None:
+                login_user(user)
+                flash("Logged in successfully.", category="success")
+                return redirect(url_for('index'))
+            else:
+                flash("Error: user not found in the database.", category="error")
+                print(f"User not found in the database. Discord ID: {user_id}")  # Additional logging
+                return redirect(url_for('discord.login'))
+        else:
+            flash("Error: could not fetch user information from Discord.", category="error")
+            print(f"Error fetching user information from Discord. Status code: {account_info.status_code}")  # Additional logging
+            return redirect(url_for('login'))
 
     return render_template('login.html')
+
 
 
 @oauth_authorized.connect_via(discord_blueprint)
