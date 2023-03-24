@@ -478,10 +478,10 @@ class AddEntityForm(FlaskForm):
     entity = SelectField('Non-Player Entity', validators=[DataRequired()])
     submit = SubmitField('Add Entity')
 
+
 class RemoveEntityForm(FlaskForm):
     entity = SelectField('Non-Player Entity', validators=[DataRequired()])
     submit = SubmitField('Remove Entity')
-
 
 
 @app.route('/attack', methods=['POST'])
@@ -516,27 +516,10 @@ def login():
         return redirect(url_for('index'))
 
     if not discord.authorized:
-        print(1)
         return redirect(url_for('discord.login'))
     else:
-        account_info = discord.get('/api/users/@me')
-        print("account_info:", account_info.json())  # Debugging line
-        if account_info.ok:
-            user_data = account_info.json()
-            print("user_data:", user_data)  # Debugging line
-            user_id = user_data['id']
-            user = UserModel.query.filter_by(discord_id=user_id).first()
-
-            if user is not None:
-                login_user(user)
-                flash("Logged in successfully.", category="success")
-                return redirect(url_for('index'))
-            else:
-                flash("Error: user not found in the database.", category="error")
-                return redirect(url_for('discord.login'))
-        else:
-            flash("Error: could not fetch user information from Discord.", category="error")
-            return redirect(url_for('login'))
+        # Remove the entire `else` block, as the user will be logged in by the `discord_logged_in` function
+        pass
 
     return render_template('login.html')
 
@@ -575,31 +558,15 @@ def discord_logged_in(blueprint, token):
     # You can store the user's ID in the session to keep them logged in
     session['user_id'] = user.id
 
+    # Log in the user
+    login_user(user)
+
     if guilds_data:
         # Store the first guild's ID in the session
         print(guilds_data)
         session['guild_id'] = [guild['id'] for guild in guilds_data]
 
-
-@app.route('/login/discord/authorized')
-def authorized():
-    resp = discord.authorized_response()
-    print(resp)
-    if resp is None or resp.get('access_token') is None:
-        flash('Access denied: reason=%s error=%s' % (
-            request.args['error'],
-            request.args['error_description']
-        ))
-        return redirect(url_for('login'))
-
-    session['discord_token'] = (resp['access_token'], '')
-    user_data = discord.get('/users/@me').data
-    print(user_data)
-
-    # Add your logic for handling user_data here
-    # (e.g., storing it in the database, creating a session, etc.)
-
-    return redirect(url_for('index'))  # Replace 'dashboard' with the desired route after successful login
+    return redirect(url_for('index'))
 
 
 @app.route('/create-game', methods=['GET', 'POST'])
