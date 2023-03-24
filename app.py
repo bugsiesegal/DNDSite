@@ -27,13 +27,13 @@ CLIENT_SECRET = os.environ.get('DISCORD_CLIENT_SECRET')
 DISCORD_REDIRECT_URI = os.environ.get('REDIRECT_URL')
 
 # Set up Discord OAuth2 with Flask-Dance
-discord_blueprint = make_discord_blueapp.logger.info(
+discord_blueprint = make_discord_blueprint(
     client_id=CLIENT_ID,
     client_secret=CLIENT_SECRET,
     scope=["identify", "guilds"],
     redirect_url=DISCORD_REDIRECT_URI,  # Update with your app's URL
 )
-app.register_blueapp.logger.info(discord_blueprint, url_prefix="/login")
+app.register_blueprint(discord_blueprint, url_prefix="/login")
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager()
