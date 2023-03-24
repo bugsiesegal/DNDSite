@@ -727,5 +727,4 @@ if app.debug:
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '0'
 
 if __name__ == '__main__':
-    app.config['DEBUG'] = False  # Turn Off debug mode
-    app.run()
+    app.run(host='0.0.0.0', debug=True)
