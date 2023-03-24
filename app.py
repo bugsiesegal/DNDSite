@@ -31,15 +31,8 @@ discord_blueprint = make_discord_blueprint(
     client_id=CLIENT_ID,
     client_secret=CLIENT_SECRET,
     scope=["identify", "guilds"],
-    redirect_url=url_for('login', _external=True),  # Update with your app's URL
+    redirect_url=DISCORD_REDIRECT_URI,  # Update with your app's URL
 )
-
-
-def set_discord_redirect_url():
-    with app.app_context():
-        discord_blueprint.backend.redirect_url = url_for("login", _external=True)
-
-
 app.register_blueprint(discord_blueprint, url_prefix="/login")
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
@@ -705,5 +698,4 @@ if app.debug:
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '0'
 
 if __name__ == '__main__':
-    set_discord_redirect_url()
     app.run(host='0.0.0.0', debug=True)
