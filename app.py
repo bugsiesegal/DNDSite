@@ -24,7 +24,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get('DATABASE_URL', 'sqlite:/
 # Replace CLIENT_ID and CLIENT_SECRET with your Discord app's values
 CLIENT_ID = os.environ.get('DISCORD_CLIENT_ID')
 CLIENT_SECRET = os.environ.get('DISCORD_CLIENT_SECRET')
-OAUTH2_REDIRECT_URI = 'https://psionicsystem.herokuapp.com/login/discord/authorized'
+OAUTH2_REDIRECT_URI = 'https://psionicsystem.herokuapp.com/login/discord'
 
 # Set up Discord OAuth2 with Flask-Dance
 discord_blueprint = make_discord_blueprint(
