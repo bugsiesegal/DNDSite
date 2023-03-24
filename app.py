@@ -582,6 +582,7 @@ def discord_logged_in(blueprint, token):
 @app.route('/login/discord/authorized')
 def authorized():
     resp = discord.authorized_response()
+    print(resp)
     if resp is None or resp.get('access_token') is None:
         flash('Access denied: reason=%s error=%s' % (
             request.args['error'],
@@ -591,6 +592,7 @@ def authorized():
 
     session['discord_token'] = (resp['access_token'], '')
     user_data = discord.get('/users/@me').data
+    print(user_data)
 
     # Add your logic for handling user_data here
     # (e.g., storing it in the database, creating a session, etc.)
