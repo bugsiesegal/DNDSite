@@ -24,7 +24,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get('DATABASE_URL', 'sqlite:/
 # Replace CLIENT_ID and CLIENT_SECRET with your Discord app's values
 CLIENT_ID = os.environ.get('DISCORD_CLIENT_ID')
 CLIENT_SECRET = os.environ.get('DISCORD_CLIENT_SECRET')
-DISCORD_REDIRECT_URI = os.environ.get('REDIRECT_URL')
+DISCORD_REDIRECT_URI = DISCORD_REDIRECT_URI = os.environ.get('DISCORD_REDIRECT_URI')
 
 # Set up Discord OAuth2 with Flask-Dance
 discord_blueprint = make_discord_blueprint(
@@ -163,7 +163,7 @@ class GameModel(db.Model, UserMixin):
                                backref=db.backref('games', lazy='dynamic'))
 
     def get_players(self):
-        app.logger.info(self.players[0])
+        print(self.players[0])
         return self.players
 
 
@@ -478,10 +478,10 @@ class AddEntityForm(FlaskForm):
     entity = SelectField('Non-Player Entity', validators=[DataRequired()])
     submit = SubmitField('Add Entity')
 
-
 class RemoveEntityForm(FlaskForm):
     entity = SelectField('Non-Player Entity', validators=[DataRequired()])
     submit = SubmitField('Remove Entity')
+
 
 
 @app.route('/attack', methods=['POST'])
@@ -516,14 +516,14 @@ def login():
         return redirect(url_for('index'))
 
     if not discord.authorized:
-        app.logger.info(1)
+        print(1)
         return redirect(url_for('discord.login'))
     else:
         account_info = discord.get('/api/users/@me')
-        app.logger.info("account_info:", account_info.json())  # Debugging line
+        print("account_info:", account_info.json())  # Debugging line
         if account_info.ok:
             user_data = account_info.json()
-            app.logger.info("user_data:", user_data)  # Debugging line
+            print("user_data:", user_data)  # Debugging line
             user_id = user_data['id']
             user = UserModel.query.filter_by(discord_id=user_id).first()
 
@@ -533,26 +533,23 @@ def login():
                 return redirect(url_for('index'))
             else:
                 flash("Error: user not found in the database.", category="error")
-                app.logger.info(f"User not found in the database. Discord ID: {user_id}")  # Additional logging
                 return redirect(url_for('discord.login'))
         else:
             flash("Error: could not fetch user information from Discord.", category="error")
-            app.logger.info(f"Error fetching user information from Discord. Status code: {account_info.status_code}")  # Additional logging
             return redirect(url_for('login'))
 
     return render_template('login.html')
 
 
-
 @oauth_authorized.connect_via(discord_blueprint)
 def discord_logged_in(blueprint, token):
     resp = blueprint.session.get('/api/users/@me')
-    app.logger.info(resp)
+    print(resp)
     if not resp.ok:
         flash('Failed to fetch user information from Discord')
         return False
     user_data = resp.json()
-    app.logger.info("user_data:", user_data)  # Debugging line
+    print("user_data:", user_data)  # Debugging line
 
     # Fetch the user's guilds
     guilds_resp = blueprint.session.get('/api/users/@me/guilds')
@@ -578,15 +575,31 @@ def discord_logged_in(blueprint, token):
     # You can store the user's ID in the session to keep them logged in
     session['user_id'] = user.id
 
-    # Log in the user
-    login_user(user)
-
     if guilds_data:
         # Store the first guild's ID in the session
-        app.logger.info(guilds_data)
+        print(guilds_data)
         session['guild_id'] = [guild['id'] for guild in guilds_data]
 
-    return redirect(url_for('index'))
+
+@app.route('/login/discord/authorized')
+def authorized():
+    resp = discord.authorized_response()
+    print(resp)
+    if resp is None or resp.get('access_token') is None:
+        flash('Access denied: reason=%s error=%s' % (
+            request.args['error'],
+            request.args['error_description']
+        ))
+        return redirect(url_for('login'))
+
+    session['discord_token'] = (resp['access_token'], '')
+    user_data = discord.get('/users/@me').data
+    print(user_data)
+
+    # Add your logic for handling user_data here
+    # (e.g., storing it in the database, creating a session, etc.)
+
+    return redirect(url_for('index'))  # Replace 'dashboard' with the desired route after successful login
 
 
 @app.route('/create-game', methods=['GET', 'POST'])
