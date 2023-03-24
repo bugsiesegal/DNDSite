@@ -27,13 +27,13 @@ CLIENT_SECRET = os.environ.get('DISCORD_CLIENT_SECRET')
 DISCORD_REDIRECT_URI = os.environ.get('REDIRECT_URL')
 
 # Set up Discord OAuth2 with Flask-Dance
-discord_blueprint = make_discord_blueprint(
+discord_blueprint = make_discord_blueapp.logger.info(
     client_id=CLIENT_ID,
     client_secret=CLIENT_SECRET,
     scope=["identify", "guilds"],
     redirect_url=DISCORD_REDIRECT_URI,  # Update with your app's URL
 )
-app.register_blueprint(discord_blueprint, url_prefix="/login")
+app.register_blueapp.logger.info(discord_blueprint, url_prefix="/login")
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager()
@@ -163,7 +163,7 @@ class GameModel(db.Model, UserMixin):
                                backref=db.backref('games', lazy='dynamic'))
 
     def get_players(self):
-        print(self.players[0])
+        app.logger.info(self.players[0])
         return self.players
 
 
@@ -516,14 +516,14 @@ def login():
         return redirect(url_for('index'))
 
     if not discord.authorized:
-        print(1)
+        app.logger.info(1)
         return redirect(url_for('discord.login'))
     else:
         account_info = discord.get('/api/users/@me')
-        print("account_info:", account_info.json())  # Debugging line
+        app.logger.info("account_info:", account_info.json())  # Debugging line
         if account_info.ok:
             user_data = account_info.json()
-            print("user_data:", user_data)  # Debugging line
+            app.logger.info("user_data:", user_data)  # Debugging line
             user_id = user_data['id']
             user = UserModel.query.filter_by(discord_id=user_id).first()
 
@@ -533,11 +533,11 @@ def login():
                 return redirect(url_for('index'))
             else:
                 flash("Error: user not found in the database.", category="error")
-                print(f"User not found in the database. Discord ID: {user_id}")  # Additional logging
+                app.logger.info(f"User not found in the database. Discord ID: {user_id}")  # Additional logging
                 return redirect(url_for('discord.login'))
         else:
             flash("Error: could not fetch user information from Discord.", category="error")
-            print(f"Error fetching user information from Discord. Status code: {account_info.status_code}")  # Additional logging
+            app.logger.info(f"Error fetching user information from Discord. Status code: {account_info.status_code}")  # Additional logging
             return redirect(url_for('login'))
 
     return render_template('login.html')
@@ -547,12 +547,12 @@ def login():
 @oauth_authorized.connect_via(discord_blueprint)
 def discord_logged_in(blueprint, token):
     resp = blueprint.session.get('/api/users/@me')
-    print(resp)
+    app.logger.info(resp)
     if not resp.ok:
         flash('Failed to fetch user information from Discord')
         return False
     user_data = resp.json()
-    print("user_data:", user_data)  # Debugging line
+    app.logger.info("user_data:", user_data)  # Debugging line
 
     # Fetch the user's guilds
     guilds_resp = blueprint.session.get('/api/users/@me/guilds')
@@ -583,7 +583,7 @@ def discord_logged_in(blueprint, token):
 
     if guilds_data:
         # Store the first guild's ID in the session
-        print(guilds_data)
+        app.logger.info(guilds_data)
         session['guild_id'] = [guild['id'] for guild in guilds_data]
 
     return redirect(url_for('index'))
