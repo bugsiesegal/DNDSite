@@ -478,10 +478,10 @@ class AddEntityForm(FlaskForm):
     entity = SelectField('Non-Player Entity', validators=[DataRequired()])
     submit = SubmitField('Add Entity')
 
+
 class RemoveEntityForm(FlaskForm):
     entity = SelectField('Non-Player Entity', validators=[DataRequired()])
     submit = SubmitField('Remove Entity')
-
 
 
 @app.route('/attack', methods=['POST'])
@@ -650,6 +650,56 @@ def select_game():
         return redirect(url_for('index'))
 
 
+@app.route('/add_entity_by_id', methods=['POST'])
+@login_required
+def add_entity_by_id():
+    game_id = session.get('selected_game_id')
+    if game_id:
+        game = GameModel.query.get(game_id)
+        if game:
+            entity_id = request.form.get('entity_id')
+            entity = EntityModel.query.get(entity_id)
+            if entity:
+                game.entities.append(entity)
+                db.session.commit()
+                flash('Entity added successfully')
+                return redirect(url_for('game_players'))
+            else:
+                flash('Entity not found')
+                return jsonify({'success': False, 'message': 'Entity not found'})
+        else:
+            flash('Game not found')
+            return jsonify({'success': False, 'message': 'Game not found'})
+    else:
+        flash('Please select a game first')
+        return jsonify({'success': False, 'message': 'Please select a game first'})
+
+
+@app.route('/remove_entity_by_id', methods=['POST'])
+@login_required
+def remove_entity_by_id():
+    game_id = session.get('selected_game_id')
+    if game_id:
+        game = GameModel.query.get(game_id)
+        if game:
+            entity_id = request.form.get('entity_id')
+            entity = EntityModel.query.get(entity_id)
+            if entity:
+                game.entities.remove(entity)
+                db.session.commit()
+                flash('Entity removed successfully')
+                return jsonify({'success': True, 'message': 'Entity removed'})
+            else:
+                flash('Entity not found')
+                return jsonify({'success': False, 'message': 'Entity not found'})
+        else:
+            flash('Game not found')
+            return jsonify({'success': False, 'message': 'Game not found'})
+    else:
+        flash('Please select a game first')
+        return jsonify({'success': False, 'message': 'Please select a game first'})
+
+
 @app.route('/game-players')
 @login_required
 def game_players():
@@ -658,13 +708,17 @@ def game_players():
         game = GameModel.query.get(game_id)
         if game:
             players = game.get_players()
-            entities = EntityModel.query.filter(EntityModel.user_id.is_(None)).all()
+            entities = game.entities
             player_entity = EntityModel.query.filter_by(user_id=current_user.id).first()
             attack_logs = session.get('attack_logs', [])
 
             form = AddEntityForm()
-            form.entity.choices = [(entity.id, entity.name) for entity in EntityModel.query.filter(
-                EntityModel.id.notin_([player.id for player in game.players])).all()]
+            form.entity.choices = [(entity.id, entity.name) for entity in EntityModel.query.all() if
+                                   entity.user_id is None]
+
+            remove_form = RemoveEntityForm()
+            remove_form.entity.choices = [(entity.id, entity.name) for entity in game.entities if
+                                          entity.user_id is None]
 
             if form.validate_on_submit():
                 entity_id = form.entity.data
@@ -675,9 +729,6 @@ def game_players():
                     flash('Entity added successfully')
                 else:
                     flash('Entity not found')
-
-            remove_form = RemoveEntityForm()
-            remove_form.entity.choices = [(entity.id, entity.name) for entity in game.entities]
 
             if remove_form.validate_on_submit():
                 entity_id = remove_form.entity.data
